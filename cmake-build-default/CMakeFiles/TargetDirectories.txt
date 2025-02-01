@@ -1,0 +1,3 @@
+/Users/gabocastillo/Documents/computer_graphics_revamped/cmake-build-default/CMakeFiles/rt.dir
+/Users/gabocastillo/Documents/computer_graphics_revamped/cmake-build-default/CMakeFiles/edit_cache.dir
+/Users/gabocastillo/Documents/computer_graphics_revamped/cmake-build-default/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,37 @@
+//iteracion manual para pruebas
+    	Ray secondRay = Ray(xt, wi_new);
+    	//muestrea un punto a largo del rayo
+    	int idsource2 = arr[(int)(erand48(seed) * count)];
+    	double d2 = freeFlightSample(sigma_t);
+    	double pdf2 = freeFlightProb(sigma_t, d2);
+    	if (d2 >= t)
+    	{
+    		continue;
+
+    	}
+
+    	Color Lind;
+    	Point xt2 = secondRay.o + secondRay.d * d2;
+    	Vector wi_new2 = isotropicPhaseSample();
+    	double T2 = transmitance(secondRay.o, xt2, sigma_t);
+
+    	if (spheres[idsource].r == 0) {
+    		Point light = spheres[idsource].p;
+    		if (visibility(light, xt2)) {
+    			Color Le = spheres[idsource2].radiance;
+    			double distanceLight = (light - xt2).dot(light - xt2);
+    			Le = Le * (1 / distanceLight);
+    			Ls = Le * isotropicPhaseFunction() * transmitance(xt2, light, sigma_t);
+    			Lind = Ls * T2 * sigma_s * (1 / prob); //este es el calculo de la luz directa, hasta aqui
+    		}
+
+    		Lind = Lind * T * sigma_s * (1/pdf2);
+
+
+    	}
+
+
+    	Li = Li + (Ld + Lind) * (1/pdf) * (1/continueprob);
+
+
+    	break;
