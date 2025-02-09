@@ -12,10 +12,11 @@
 //funciones para volumenes
 inline double transmitance(Point x1, Point x2, double sigma_t){
     //obten la distancia entre dos puntos
-    double d2 = (x2-x1).dot(x2-x1);
+    Vector aux = x2-x1;
+    double d2 = (aux).dot(aux);
     double d = sqrt(d2);
     //devuelve la transmitancia
-    return exp(-sigma_t*d);
+    return exp(sigma_t*d*-1.0);
 }
 
 //funcion para calcular la suma de las transmitacias entre dos puntos

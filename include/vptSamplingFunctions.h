@@ -12,17 +12,17 @@ inline double freeFlightSample(double sigma_t){
     //generar un numero aleatorio
     double xi = erand48(seed);
     //calcular la distancia de vuelo libre
-    return -log(1-xi)/sigma_t;
+    return -log(xi)/sigma_t;
 }
 
 
 //pdf del free flight sampling (para medio homogeneo)
 inline double freeFlightProb(double sigma_t, double d){
-    return sigma_t*exp(-sigma_t*d);
+    return sigma_t*exp(sigma_t*d*-1.0);
 }
 //pdf success = 1 - pdf failure
 inline double pdfSuccess(double sigma_t, double tmax){
-    return 1-exp(-sigma_t*tmax);
+    return 1.0-exp(-sigma_t*tmax);
 }
 
 //pdf failure = transmitance (para medio homogeneo)

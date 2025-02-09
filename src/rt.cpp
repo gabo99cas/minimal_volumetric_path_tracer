@@ -45,16 +45,6 @@ inline Color marchingSA(Sphere &source, Point x, int indice, const Sphere &obj, 
 	return L;
 }
 
-//funcion no utilizada aun 
-inline Point intersect(const Ray &r, const Vector &n){
-	double t;
-	int id = 0;
-	if (!intersect(r, t, id))
-		return {};	// el rayo no intersecto objeto, return Vector() == negro
-	Point x = r.o+r.d*t;
-	return x;
-}
-
 /*Funciones legacy */
 
 //path tracing explicito recursivo con MIS y ruleta rusa constante
@@ -810,7 +800,7 @@ int main(int argc, char *argv[]) {
 				//pixelValue = volumetricPathTracerExplicitEquiAngular(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0,7)+pixelValue;
 
 				//pixelValue = volumetricPathTracer3(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0)+pixelValue;
-				pixelValue = volumetricPathTracerIterative(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009)+pixelValue;
+				pixelValue = volumetricPathTracerIterative(Ray(camera.o, cameraRayDir.normalize()),0.0005,0.01)+pixelValue;
 			}
 
 			pixelValue = pixelValue * (1/(double)rpp); //promedio de color de cada pixel
