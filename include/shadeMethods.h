@@ -120,7 +120,7 @@ inline Color iterativePathTracer(Ray r){
 
 
         if(spheres[id].radiance.x > 0){ //si se impacta una fuente de luz, regresa radiancia
-            if(bounces<1) return spheres[id].radiance;
+            if(bounces<1) return spheres[id].radiance; //esto solo aplica para el primer rayo que no hace muestreo explicito
             break;
         }
 

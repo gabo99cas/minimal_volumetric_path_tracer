@@ -12,7 +12,7 @@ inline double freeFlightSample(double sigma_t){
     //generar un numero aleatorio
     double xi = erand48(seed);
     //calcular la distancia de vuelo libre
-    return -log(xi)/sigma_t;
+    return -log(1-xi)/sigma_t;
 }
 
 
@@ -47,7 +47,7 @@ inline Vector isotropicPhaseSample(){
 
 //pdf de la fase isotropica
 inline double isotropicPhaseProb(){
-    return 1/(4*M_PI);
+    return 1.0/(4.0*M_PI);
 }
 
 //equi-angular sampling
@@ -58,7 +58,7 @@ inline double equiAngularSample(double D, double thetaA, double thetaB){
 
 //pdf equi-angular sampling
 inline double equiAngularProb(double D, double thetaA, double thetaB, double t){
-    return D/(thetaB-thetaA)/(t*t+D*D);
+    return D/((thetaB-thetaA)*(t*t+D*D));
 }
 
 #endif //VPTSAMPLINGFUNCTIONS_H

@@ -541,11 +541,11 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
 
 		//free flight sampling
 
-
+/*
     	double d = freeFlightSample(sigma_t);
     	double pdf;
+*/
 
-/*
     	//operaciones en caso de equiangular sampling
     	double D = 0;
     	double thetaA = 0;
@@ -554,11 +554,12 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
     	equiAngularParams(idsource, xs, x0, ray,D, thetaA, thetaB);
     	double d = equiAngularSample(D, thetaA, thetaB);
     	double pdf;
-*/
+
     	double TrActual = transmitance(ray.o, xs, sigma_t); //tr de x a xs
 
-		//if (erand48(seed) < TrActual) { //evento para decidir fallo en equiangular
-        if (d>=t) {
+    	//evento de fallo
+		if (erand48(seed) < TrActual) { //evento para decidir fallo en equiangular
+        //if (d>=t) {
 
         	//d = t;
         	pdf = TrActual;
@@ -583,7 +584,8 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
 
 
 
-        	Lo = pathThroughput.mult(Lo)*factor;//TrActual*(1/pdf) = 1;
+        	Lo = pathThroughput.mult(Lo)*factor*(1/continueprob);//TrActual*(1/pdf) = 1; no tiene caso calcular la transmitancia debido a que al dividirla
+        	//entre la probabilidad de fallo que es la misma transmitancia, queda en 1
 
 
         	Vector wi;
@@ -593,9 +595,8 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
 
         	double cosine = normalXS.dot(wi);
 
-        	//calcular el path troughput, ahora esto se agrega en el stack directamente para que este disponible en next iteracion
-        	//Accum = fs1.mult(Accum);
-        	//factor = 1/samplingProbability*cosine*factor;
+        	//calcular el path troughput, ahora esto se agrega en el stack directamente para que este disponible en next iteracio
+        	//factor = 1/samplingProbability*cosine*factor; pdf no se incluye porque cancela con la transmitancia
         	//agregamos en el stack los valores que corresponden a la siguiente iteracion
         	stack.emplace(Ray(xs, wi), sigma_a, sigma_s, profundidad + 1, factor*1/samplingProbability*cosine*(1/continueprob), pathThroughput.mult(fsActual));
 
@@ -611,18 +612,18 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
 
     		//if (d>=t) continue;
     		//omitir esta parte en equiangular
-    		pdf = freeFlightProb(sigma_t,d)*(1.0-TrActual);
+    		//pdf = freeFlightProb(sigma_t,d)*(1.0-TrActual); //pfallo = Tractual
 
     		//probabilidad con equiangular
-    		//pdf = equiAngularProb(D, thetaA, thetaB, d)*(1.0-TrActual);
+    		pdf = equiAngularProb(D, thetaA, thetaB, d)*(1.0-TrActual);
 
-    		Point xt = ray.o + ray.d * d;
+    		//Point xt = ray.o + ray.d * d;
     		//para equiangular sampling xt tiene como referencia x0
-    		//Point xt = x0 + ray.d * d;
-    		Vector wi_new = isotropicPhaseSample(); //nueva direccion para siguiente rayo
+    		Point xt = x0 + ray.d * d;
+
     		double T = transmitance(ray.o, xt, sigma_t);
 
-    		//double p_wi = isotropicPhaseProb();
+
 
     		//calculando un single scattering
     		if (spheres[idsource].r == 0) {
@@ -631,29 +632,149 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
     				Color Le = spheres[idsource].radiance;
     				double distanceLight = (light - xt).dot(light - xt);
     				Le = Le * (1 / distanceLight);
-    				Ls = Le  * isotropicPhaseFunction() * transmitance(xt, light, sigma_t); //leer Ls ray marchind
+    				Ls =  Le * transmitance(xt, light, sigma_t)* isotropicPhaseFunction(); //leer Ls ray marchind
     				Ld = Ls * T * sigma_s * (1 / prob); //este es el calculo de la luz directa, hasta aqui
     			}
 
     		}
 
-    		Ld = pathThroughput.mult(Ld) * (1 / pdf) * factor;
+    		Vector wi_new = isotropicPhaseSample(); //nueva direccion para siguiente rayo
+    		//pdf *= isotropicPhaseProb(); la fase cancela a la probabilidad
+
+    		Ld = pathThroughput.mult(Ld) * (1 / pdf) * factor * (1/continueprob);
+
+    		Li = Li + Ld;
 
 
-
-    		//Ld = pathThroughput.mult(Ld) * (1 / pdf) * factor; //aplicar el path throughput -legacy
+    		// -legacy Ld = pathThroughput.mult(Ld) * (1 / pdf) * factor; //aplicar el path throughput
     		//es necesario multiplicar por la pdf inmediata para completar el montecarlo
 
-    		stack.emplace(Ray(xt, wi_new), sigma_a, sigma_s, profundidad + 1, factor*T*sigma_s*(1/continueprob), pathThroughput);
+    		stack.emplace(Ray(xt, wi_new), sigma_a, sigma_s, profundidad + 1, factor*T*sigma_s*(1/continueprob)*(1/pdf), pathThroughput);
 
     		//scatterFactor *=  pdf * T * sigma_s; se acumula directamente en el stack para que este disponible hasta la siguiente llamada (iteracion)
 
 
-    		Li = Li + Ld;
+
     	}
     }
 
     return Li;
+}
+
+inline Color volumetricPathTracerRecursive(const Ray &r, double sigma_a, double sigma_s){
+	int number = spheres.size();
+	double sigma_t = sigma_a + sigma_s;
+	double continueprob = 0.6;
+	double q = 1 - continueprob;
+
+	double t;
+	int id = 0;
+	if (!intersect(r, t, id)) {
+		return {0, 0, 0};
+	}
+
+	//determinar el limite del rayo previamente
+	Point xs = r.o + r.d * t;
+	Vector normalXS = xs - spheres[id].p;
+	normalXS.normalize();
+
+
+	int arr[4] = {-1, -1, -1, -1};
+	int j = 0, count = 0;
+	for (int i = 0; i < number; i++) {
+		if (spheres[i].radiance.x > 0 || spheres[i].radiance.y > 0 || spheres[i].radiance.z > 0) {
+			arr[j++] = i;
+		}
+	}
+
+	count = j;
+
+	if (count == 0) {
+		return Color(0, 0, 0);
+	}
+
+	//probabildad uniforme para cada fuente
+	double prob = 1.0/count;
+
+	int idsource = arr[(int)(erand48(seed) * count)];
+
+	//operaciones en caso de equiangular sampling
+	double D = 0;
+	double thetaA = 0;
+	double thetaB = 0;
+	Point x0 = Point();
+	equiAngularParams(idsource, xs, x0, r,D, thetaA, thetaB);
+	double d = equiAngularSample(D, thetaA, thetaB);
+	double pdf;
+
+	double TrActual = transmitance(r.o, xs, sigma_t); //tr de x a xs
+
+	//terminar el camino
+	if (erand48(seed) < q) {
+		return Color(0, 0, 0);
+	}
+
+	if (erand48(seed) < TrActual)
+	{
+
+		Color Ld = Color(0, 0, 0);
+		for (int light = 0; light < number; light++) {
+			if (spheres[light].r == 0) {
+				double Trs = transmitance(xs, spheres[light].p, sigma_t); //es valido en tanto sea puntual
+				Ld = Ld + pLight(spheres[id], xs, normalXS, r.d, spheres[light].radiance, spheres[light].p, spheres[id].alpha)*Trs;
+				//incluir el efecto de la transmitancia entre xs y p (single scattering)
+			}
+		}
+
+
+
+
+		Color Lo = Ld*(1/continueprob);//TrActual*(1/pdf) = 1; no tiene caso calcular la transmitancia debido a que al dividirla
+		//entre la probabilidad de fallo que es la misma transmitancia, queda en 1
+
+
+		Vector wi;
+		double samplingProbability;
+		Color fsActual = bdsf(wi, r.d, normalXS, samplingProbability, id);
+		wi.normalize();
+
+		double cosine = normalXS.dot(wi);
+
+		return Lo + fsActual.mult(volumetricPathTracerRecursive(Ray(xs, wi), sigma_a, sigma_s))*cosine*(1/continueprob)*(1/samplingProbability);
+
+	}
+	else{
+
+		//probabilidad con equiangular
+		pdf = equiAngularProb(D, thetaA, thetaB, d)*(1.0-TrActual);
+
+		//Point xt = ray.o + ray.d * d;
+		//para equiangular sampling xt tiene como referencia x0
+		Point xt = x0 + r.d * d;
+
+		double T = transmitance(r.o, xt, sigma_t);
+
+		Color Ld = Color(0, 0, 0);
+
+		//calculando un single scattering
+		if (spheres[idsource].r == 0) {
+			Point light = spheres[idsource].p;
+			if (visibility(light, xt)) {
+				Color Le = spheres[idsource].radiance;
+				double distanceLight = (light - xt).dot(light - xt);
+				Le = Le * (1 / distanceLight);
+				Color Ls =  Le * transmitance(xt, light, sigma_t);
+				Ld = Ls * T * sigma_s * isotropicPhaseFunction() * (1/prob); //este es el calculo de la luz directa, hasta aqui
+			}
+
+		}
+
+		Vector wi_new = isotropicPhaseSample(); //nueva direccion para siguiente rayo
+		//pdf *= isotropicPhaseProb(); la fase cancela a la probabilidad
+
+		return Ld*(1/pdf)*(1/continueprob) + volumetricPathTracerRecursive(Ray(xt, wi_new), sigma_a, sigma_s)*sigma_s*T*(1/continueprob)*(1/pdf);
+
+	}
 }
 
 

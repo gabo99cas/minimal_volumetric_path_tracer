@@ -800,7 +800,7 @@ int main(int argc, char *argv[]) {
 				//pixelValue = volumetricPathTracerExplicitEquiAngular(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0,7)+pixelValue;
 
 				//pixelValue = volumetricPathTracer3(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0)+pixelValue;
-				pixelValue = volumetricPathTracerIterative(Ray(camera.o, cameraRayDir.normalize()),0.0005,0.01)+pixelValue;
+				pixelValue = volumetricPathTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
 			}
 
 			pixelValue = pixelValue * (1/(double)rpp); //promedio de color de cada pixel
