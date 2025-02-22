@@ -594,6 +594,7 @@ Color volumetricPathTracerExplicitEquiAngular(const Ray &r, double sigma_a, doub
 
 	//montercarlo con muestreo equi-angular
 	Color montecarlo = (Ls*T*sigma_s);
+	double t_ajustada = 1;
 	return (Ld + montecarlo)*(1/equiAngularProb(D, thetaA, thetaB, d))*(1/continueprob);
 
 }
@@ -800,7 +801,8 @@ int main(int argc, char *argv[]) {
 				//pixelValue = volumetricPathTracerExplicitEquiAngular(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0,7)+pixelValue;
 
 				//pixelValue = volumetricPathTracer3(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0)+pixelValue;
-				pixelValue = volumetricPathTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
+				//pixelValue = volumetricPathTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
+				pixelValue = implicitVPTracerRecursiveFree(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
 			}
 
 			pixelValue = pixelValue * (1/(double)rpp); //promedio de color de cada pixel

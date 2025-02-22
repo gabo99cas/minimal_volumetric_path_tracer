@@ -36,7 +36,7 @@ inline bool intersect(const Ray &r, double &t, int &id) {
 }
 
 //resuelve la visibilidad para dos puntos
-bool visibility(Point light, Point x){
+inline bool visibility(Point light, Point x){
     Vector lx = light-x; //vector con direccion a la fuente
     double distance = sqrt(lx.dot(lx)); //distancia a la fuente
     lx.normalize();
@@ -49,7 +49,7 @@ bool visibility(Point light, Point x){
     {
         return true; //devolver radiancia
     }
-    else return false;
+    return false;
 }
 
 //resuelve la visibilidad de forma implicita (no sirve para muestreo de luz)

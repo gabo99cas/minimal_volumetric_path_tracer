@@ -18,7 +18,7 @@ class Vector {
     Vector operator+(const Vector &b) const { return Vector(x + b.x, y + b.y, z + b.z); }
     Vector operator-(const Vector &b) const { return Vector(x - b.x, y - b.y, z - b.z); }
     // operator multiplicacion vector y escalar
-    Vector operator*(double b) const { return Vector(x * b, y * b, z * b); }
+    Vector operator*(double b) const { return {x * b, y * b, z * b}; }
 
     // operator % para producto cruz
     Vector operator%(Vector&b){return Vector(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x);}

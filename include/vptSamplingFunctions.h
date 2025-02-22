@@ -58,7 +58,7 @@ inline double equiAngularSample(double D, double thetaA, double thetaB){
 
 //pdf equi-angular sampling
 inline double equiAngularProb(double D, double thetaA, double thetaB, double t){
-    return D/((thetaB-thetaA)*(t*t+D*D));
+    return D/(thetaB-thetaA)/(t*t+D*D);
 }
 
 #endif //VPTSAMPLINGFUNCTIONS_H

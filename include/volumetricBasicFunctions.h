@@ -169,33 +169,41 @@ inline bool intersectMedium(const Ray &r, double &tSurface, int &id, double &tMe
 }
 
 //funcion utilitaria para Sampleo de phase
-Vector samplePhaseFunction(Vector &wi, const Vector &wo, double &prob) {
+inline Vector samplePhaseFunction(Vector &wi, const Vector &wo, double &prob) {
     wi = isotropicPhaseSample(); // Pick a random direction
     prob = 1.0 / (4.0 * M_PI); // Isotropic PDF
     return {1, 1, 1}; // No color change
 }
 
 //recibe el indice de la fuente de luz y regresa x0, D, thetaA y thetaB
-inline void equiAngularParams(int idsource, Point x, Point &x0, Ray r, double &D, double &thetaA, double &thetaB){
+inline bool equiAngularParams(int idsource, Point x, Point &x0, Ray r, double &D, double &thetaA, double &thetaB){
     Point c = spheres[idsource].p;
     //calcular la proyeccion ortogonal de c en el rayo, punto mas cercano a c en el rayo, x0
-    x0 = r.o + r.d*((c-r.o).dot(r.d)/(r.d.dot(r.d)));
+    x0 = r.o + r.d*((c-r.o).dot(r.d)/r.d.dot(r.d));
     //el parametro x es x_s
     //verificar si el punto x0 esta entre r.o y x
-    if((x0-r.o).dot(r.d)<0) x0=r.o;
+    if((x0-r.o).dot(r.d)<0)
+    {
+        x0 = r.o;
+        //return false;
+    }
     if((x0-x).dot(r.d)>0){
         x0 = x;
+        //return false;
+
     }
+
 
     //calcular la magnitud de x0-c
     D = sqrt((x0-c).dot(x0-c));
     //theta A y theta B son los angulos de apertura de la fuente de luz, intervalo de integracion, en este caso usaremos r.o y x como puntos de integracion
     //calcular los lados del triangulo rectangulo, comparten D
-    double A = sqrt((x0-r.o).dot(x0-r.o))*-1;
-    double B = sqrt((x-x0).dot(x-x0));
+    const double A = sqrt((x0-r.o).dot(x0-r.o))*-1;
+    const double B = sqrt((x-x0).dot(x-x0));
     //calcular el angulo theta A y theta B
     thetaA = atan2(A,D);
     thetaB = atan2(B,D);
+    return true;
 }
 
 #endif //VOLUMETRICBASICFUNCTIONS_H
