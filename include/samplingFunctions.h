@@ -61,6 +61,7 @@ inline Vector cosineHemispheric(Vector n){ //n es z para la direccion local mues
 		return wi;
 }
 
+//devuelve la dirección muestreada con estrategia de ángulo sólido
 inline Vector solidAngle(Vector wc, double costheta_max){
 	double e0 = erand48(seed);
 	double theta = acos((1-e0)+e0*costheta_max);

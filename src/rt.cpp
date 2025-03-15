@@ -802,10 +802,10 @@ int main(int argc, char *argv[]) {
 
 				//pixelValue = volumetricPathTracer3(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0)+pixelValue;
 				//pixelValue = volumetricPathTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
-				pixelValue = implicitVPTracerRecursiveFree(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
+				pixelValue = implicitVPTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
 			}
 
-			pixelValue = pixelValue * (1/(double)rpp); //promedio de color de cada pixel
+			pixelValue = pixelValue * (1/static_cast<double>(rpp)); //promedio de color de cada pixel
 
 			// limitar los tres valores de color del pixel a [0,1]
 			pixelColors[idx] = Color(clamp(pixelValue.x), clamp(pixelValue.y), clamp(pixelValue.z));

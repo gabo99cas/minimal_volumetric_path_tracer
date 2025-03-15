@@ -40,13 +40,14 @@ std::vector<Sphere> spheres = {
 	Sphere(1e5,  Point(0, 0, -1e5 - 81.6),  Color(),    Color (0, 0, 0),0, Color(), Color(),0), // back wall
 	Sphere(1e5,  Point(0, -1e5 - 40.8, 0),  Color(),    Color (0, 0, 0),0, Color(), Color(),0), // floor
 	Sphere(1e5,  Point(0, 1e5 + 40.8, 0),  Color(),     Color (0, 0, 0),0, Color(), Color(),0), // ceiling
-	//pruebas
+	//pruebas con un material microfacet
 	//Sphere(16.5, Point(-23, -24.3, -34.6), Color(), Color(), 1, Color(1.66058, 0.88143, 0.521467), Color(9.2282, 6.27077, 4.83803), 0.03), // esfera abajo-izq
 
 	Sphere(0,  Point(24, 24.3, -50),  Color(),   Color(0, 8000, 8000),0, Color(), Color(),0), // light source 1
 	//Sphere(0,  Point(-24, 24.3, -50),  Color(),   Color(8000, 0, 8000),0, Color(), Color(),0), // light source 2
 	//Sphere(0, Point(0, -24.3, -30), Color(),   Color(8000, 8000, 0),0, Color(), Color(),0) //light source 3
 */
+	/*
 	//fuentes de area que tienden a puntuales
 	Sphere(1e5,  Point(-1e5 - 49, 0, 0),  Color(.75, .25, .25),    Color (0, 0, 0),0, Color(), Color(),0), // left wall
 	Sphere(1e5,  Point(1e5 + 49, 0, 0),  Color(.25, .25, .75),    Color (0, 0, 0),0, Color(), Color(),0), // right wall
@@ -57,6 +58,13 @@ std::vector<Sphere> spheres = {
 
 	Sphere(12,  Point(24, 24.3, -50),  Color(),   Color(0, 800, 800),0, Color(), Color(),0), // light source 1
 	//Sphere(6,  Point(-24, 24.3, -50),  Color(),   Color(800, 0, 400),0, Color(), Color(),0), // light source 2
+	//Sphere(6, Point(0, -24.3, -30), Color(),   Color(800, 800, 0),0, Color(), Color(),0) //light source 3
+
+	*/
+	//escena especial, no paredes, unicamente fuentes
+
+	Sphere(12,  Point(24, 24.3, -50),  Color(),   Color(0, 800, 800),0, Color(), Color(),0), // light source 1
+	//Sphere(6,  Point(-24, 24.3, -50),  Color(),   Color(400, 0, 800),0, Color(), Color(),0), // light source 2
 	//Sphere(6, Point(0, -24.3, -30), Color(),   Color(800, 800, 0),0, Color(), Color(),0) //light source 3
 /*
 	//Escena: radio, posicion, color

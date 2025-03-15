@@ -10,6 +10,8 @@
 #include "vptSamplingFunctions.h"
 #include "rayMarchingMethods.h"
 
+//Las dos funciones a continuación no son como tal parte de shadow methods, fue necesario agregarlas aquí por problemas al compilar
+
 //calcula la fs y la nueva direccion para un camino en Path tracing. Lind
 inline Color bdsf(Vector &aux, Vector wray, Vector n,  double &prob, int id){
 	Vector wi;
@@ -87,6 +89,10 @@ inline Color pLight(const Sphere &obj, Point x, Vector n, Vector wray, Color I, 
     Color L = Le.mult(fr)*n.dot((light-x).normalize());
     return L;
 }
+
+//terminan funciones externas
+
+//empiezan funciones LEGACY
 
 //volumetric path tracer explicito VPT para multiples fuentes de luz
 inline Color volumetricPathTracer3(const Ray &r, double sigma_a, double sigma_s, int profundidad){
@@ -488,6 +494,9 @@ inline Color explicitPathRecursive2(const Ray &r, int bounce){
 	//return explicitPathRecursive(recursiveRay, bounce, Ld, fs, cosine, prob)
 }
 
+//implementacions en uso, las anteriores ya se consideran legacy y deben ser borradas proximamente
+
+//version iterativa explicita
 inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double sigma_s) {
     Color Li, Lo, Ls, Ld, fsActual;
     std::stack<std::tuple<Ray, double, double, int, double, Color>> stack;
@@ -649,6 +658,7 @@ inline Color volumetricPathTracerIterative(const Ray &r, double sigma_a, double 
     return Li;
 }
 
+//version recursiva explicita
 inline Color volumetricPathTracerRecursive(const Ray &r, double sigma_a, double sigma_s){
 	int number = spheres.size();
 	double sigma_t = sigma_a + sigma_s;
@@ -690,9 +700,6 @@ inline Color volumetricPathTracerRecursive(const Ray &r, double sigma_a, double 
 	pSuccess = freeFlightProb(sigma_t, d)*(1.0-TrActual);
 	*/
 
-
-
-
 	 //pre operaciones para seleccionar fuentes
 	//guarda en un arreglo los indices de las fuentes de luz
 	int arr[4] = {-1, -1, -1, -1};
@@ -715,8 +722,6 @@ inline Color volumetricPathTracerRecursive(const Ray &r, double sigma_a, double 
 
 
 	int idsource = arr[static_cast<int>(erand48(seed) * count)];
-
-
 
 
 	//operaciones en caso de equiangular sampling
@@ -806,7 +811,8 @@ inline Color volumetricPathTracerRecursive(const Ray &r, double sigma_a, double 
 	}
 }
 
-//version implicita para funcionar de base
+
+//version implicita basica con fines de comparacion
 inline Color implicitVPTracerRecursive(const Ray &r, double sigma_a, double sigma_s)
 {
 	int number = spheres.size();
@@ -814,24 +820,39 @@ inline Color implicitVPTracerRecursive(const Ray &r, double sigma_a, double sigm
 	double continueprob = 0.6;
 	double q = 1 - continueprob;
 
+	double TrActual;
+	Point xs;
+
+
 	double t;
 	int id = 0;
 	if (!intersect(r, t, id)) {
-		return {0, 0, 0};
+		//no regreses cero, propon un limite diferente para x_s
+		t = MAXFLOAT; //se ajusta la distancia maxima
+		//adicionalmente la probabilida de fallo se debe ajustar a 0 en este caso
+		TrActual = 0; //la probabilidad de salir del medio es 0 porque no hay superficie y toda la escena esta inmersa ahi
+		//¿que hacemos con id?
+		//id se mantiene como 0, los calculos referentes a la superficie no se efectuarán
+		//determinar el limite del rayo
+		xs = r.o + r.d * t;
 	}
+	else
+	{
+		//determinar el limite del rayo
+		xs = r.o + r.d * t;
+		//determinar transmitancia del recorrido
+		TrActual = transmitance(r.o, xs, sigma_t); //tr de x a xs
+	}
+
+	Vector normalXS = xs - spheres[id].p;
+	normalXS.normalize();
+
 
 	//RULETA RUSA terminar el camino
 	if (erand48(seed) < q) {
 		return {0, 0, 0};
 	}
 
-	//determinar el limite del rayo previamente
-	const Point xs = r.o + r.d * t;
-	Vector normalXS = xs - spheres[id].p;
-	normalXS.normalize();
-
-	//determinar transmitancia del recorrido
-	const double TrActual = transmitance(r.o, xs, sigma_t); //tr de x a xs
 
 
 	//pre operaciones para seleccionar fuentes
@@ -850,6 +871,7 @@ inline Color implicitVPTracerRecursive(const Ray &r, double sigma_a, double sigm
 		return {0, 0, 0};
 	}
 	//probabilidad uniforme para cada fuente
+	//esta probalidad no se debe introducir de este modo, borrar
 	double prob = 1.0/count;
 
 
@@ -864,12 +886,10 @@ inline Color implicitVPTracerRecursive(const Ray &r, double sigma_a, double sigm
 	equiAngularParams(idsource, xs, x0, r,D, thetaA, thetaB);
 	const double d = equiAngularSample(D, thetaA, thetaB);
 
-	//probabilidad con equiangular en caso de success
-	//const double pSuccess = equiAngularProb(D, thetaA, thetaB, d) * (1.0 - TrActual);
+	//probabilidad con equiangular en caso de success  --- alternativa sin MIS
+	const double pSuccess = equiAngularProb(D, thetaA, thetaB, d) * (1.0 - TrActual);
 
-
-
-
+	/*
 	// --- MIS: calcular el PDF combinado sobre todas las fuentes ---
 	// En vez de usar solo el PDF de la fuente idsource, sumamos las contribuciones
 	double p_total = 0.0;
@@ -882,8 +902,9 @@ inline Color implicitVPTracerRecursive(const Ray &r, double sigma_a, double sigm
 		p_total += prob * equiAngularProb(D_i, thetaA_i, thetaB_i, d);
 	}
 	p_total *= 1.0-TrActual;
-
+*/
 	if ( erand48(seed) <= TrActual) {
+
 
 		if (spheres[id].radiance.x>0 || spheres[id].radiance.y>0 || spheres[id].radiance.z>0){
 			return spheres[id].radiance;
@@ -912,7 +933,7 @@ inline Color implicitVPTracerRecursive(const Ray &r, double sigma_a, double sigm
 
 		const Vector wi_new = isotropicPhaseSample(); //nueva direccion para siguiente rayo
 
-		return implicitVPTracerRecursive(Ray(xt, wi_new), sigma_a, sigma_s)*sigma_s*T*(1/continueprob)*(1/p_total);
+		return implicitVPTracerRecursive(Ray(xt, wi_new), sigma_a, sigma_s)*sigma_s*T*(1/continueprob)*(1/pSuccess);
 	}
 
 }
@@ -923,31 +944,40 @@ inline Color implicitVPTracerRecursiveFree(const Ray &r, double sigma_a, double 
 	double sigma_t = sigma_a + sigma_s;
 	double continueprob = 0.6;
 	double q = 1 - continueprob;
-
-	double t;
-	int id = 0;
-	if (!intersect(r, t, id)) {
-		return {0, 0, 0};
-	}
+	Point xs;
+	Vector normalXS;
+	double TrActual;
 
 	//RULETA RUSA terminar el camino
 	if (erand48(seed) < q) {
 		return {0, 0, 0};
 	}
 
-	//determinar el limite del rayo previamente
-	const Point xs = r.o + r.d * t;
-	Vector normalXS = xs - spheres[id].p;
-	normalXS.normalize();
+	double t;
+	int id = 0;
+	if (!intersect(r, t, id)) {
+		t = MAXFLOAT; //equivale definir t como infinito para evitar que se active la condicion de fallo, NO HAY SUPERFICIE
+		TrActual = 0; //se debe despreciar la transmitancia, no hay superficie	PROBABILIDAD DE FALLO = 0
+		//return {0, 0, 0};
+	}
+	else
+	{
+		//determinar el limite del rayo
+		xs = r.o + r.d * t;
+		normalXS = xs - spheres[id].p;
+		normalXS.normalize();
 
-	//determinar transmitancia del recorrido
-	const double TrActual = transmitance(r.o, xs, sigma_t); //tr de x a xs
+		//determinar transmitancia del recorrido
+		TrActual = transmitance(r.o, xs, sigma_t); //tr de x a xs
+
+	}
+
 
 	//free flight sampling
 	const double d = freeFlightSample(sigma_t);
 	const double pSuccess = freeFlightProb(sigma_t, d)*(1.0-TrActual);
 
-	if(d>t){
+	if(d>t){ //condicion de fallo
 
 		if (spheres[id].radiance.x>0 || spheres[id].radiance.y>0 || spheres[id].radiance.z>0){
 			return spheres[id].radiance;
@@ -974,16 +1004,141 @@ inline Color implicitVPTracerRecursiveFree(const Ray &r, double sigma_a, double 
 		const Vector wi_new = isotropicPhaseSample(); //nueva direccion para siguiente rayo
 
 
-
 		return implicitVPTracerRecursiveFree(Ray(xt, wi_new), sigma_a, sigma_s)*sigma_s*T*(1/continueprob)*(1/pSuccess);
 
 	}
 
 }
 
+//version explicita para el VPT con equiangular, es decir, con conexión single scattering
+//sustituye a la version anterior volumetricPathTracerRecursive
 inline Color explicitVPTracerRecursive(const Ray &r, double sigma_a, double sigma_s)
 {
-	return {0, 0, 0};
+	int number = spheres.size();
+	double sigma_t = sigma_a + sigma_s;
+	double continueprob = 0.6;
+	double q = 1 - continueprob;
+
+	double TrActual;
+	Point xs;
+
+
+	double t;
+	int id = 0;
+	if (!intersect(r, t, id)) {
+		//no regreses cero, propon un limite diferente para x_s
+		t = MAXFLOAT; //se ajusta la distancia maxima
+		//adicionalmente la probabilida de fallo se debe ajustar a 0 en este caso
+		TrActual = 0; //la probabilidad de salir del medio es 0 porque no hay superficie y toda la escena esta inmersa ahi
+		//¿que hacemos con id?
+		//id se mantiene como 0, los calculos referentes a la superficie no se efectuarán
+		//determinar el limite del rayo
+		xs = r.o + r.d * t;
+	}
+	else
+	{
+		//determinar el limite del rayo
+		xs = r.o + r.d * t;
+		//determinar transmitancia del recorrido
+		TrActual = transmitance(r.o, xs, sigma_t); //tr de x a xs
+	}
+
+	Vector normalXS = xs - spheres[id].p;
+	normalXS.normalize();
+
+
+	//RULETA RUSA terminar el camino
+	if (erand48(seed) < q) {
+		return {0, 0, 0};
+	}
+
+
+
+	//pre operaciones para seleccionar fuentes
+	//guarda en un arreglo los indices de las fuentes de luz
+	int arr[4] = {-1, -1, -1, -1};
+	int j = 0, count = 0;
+	for (int i = 0; i < number; i++) {
+		if (spheres[i].radiance.x > 0 || spheres[i].radiance.y > 0 || spheres[i].radiance.z > 0) {
+			arr[j++] = i;
+		}
+	}
+
+	count = j;
+
+	if (count == 0) {
+		return {0, 0, 0};
+	}
+	//probabilidad uniforme para cada fuente
+	//esta probalidad no se debe introducir de este modo, borrar
+	double prob = 1.0/count;
+
+
+	int idsource = arr[static_cast<int>(erand48(seed) * count)];
+
+
+	//operaciones en caso de equiangular sampling
+	double D = 0;
+	double thetaA = 0;
+	double thetaB = 0;
+	auto x0 = Point();
+	equiAngularParams(idsource, xs, x0, r,D, thetaA, thetaB);
+	const double d = equiAngularSample(D, thetaA, thetaB);
+
+	//probabilidad con equiangular en caso de success  --- alternativa sin MIS
+	const double pSuccess = equiAngularProb(D, thetaA, thetaB, d) * (1.0 - TrActual);
+
+	/*
+	// --- MIS: calcular el PDF combinado sobre todas las fuentes ---
+	// En vez de usar solo el PDF de la fuente idsource, sumamos las contribuciones
+	double p_total = 0.0;
+	for (int i = 0; i < count; i++) {
+		int lightID = arr[i];
+		double D_i = 0, thetaA_i = 0, thetaB_i = 0;
+		Point x0_i;
+		// Se recalculan los parámetros para cada fuente
+		equiAngularParams(lightID, xs, x0_i, r, D_i, thetaA_i, thetaB_i);
+		p_total += prob * equiAngularProb(D_i, thetaA_i, thetaB_i, d);
+	}
+	p_total *= 1.0-TrActual;
+*/
+	if ( erand48(seed) <= TrActual) {
+
+		//una versión explicita no debe regresar luz al llegar a la fuente
+		if (spheres[id].radiance.x>0 || spheres[id].radiance.y>0 || spheres[id].radiance.z>0){
+			return spheres[id].radiance;
+		}
+
+		//obtener la luz directa a superfice con plight o MIS - esto equivale a single scattering
+
+		//operaciones para obtener el camino por donde continúa
+		Vector wi;
+		double samplingProbability;
+		const Color fsActual = bdsf(wi, r.d, normalXS, samplingProbability, id);
+		wi.normalize();
+
+		const double cosine = normalXS.dot(wi);
+
+		//importante, la transmitancia se omite debido a que es la probabilidad de salir, por tanto T/pFail = 1
+
+		return fsActual.mult(explicitVPTracerRecursive(Ray(xs, wi), sigma_a, sigma_s))*(1/continueprob)*cosine*(1/samplingProbability);
+
+	}
+	else{
+
+		//para equiangular sampling xt tiene como referencia x0
+		const Point xt = x0 + r.d * d;
+
+		const double T = transmitance(r.o, xt, sigma_t);
+
+		//obtener la iluminación directa aqui haciendo single scattering para luz puntual o de area - angulo solido
+
+		//operaciones par aobtner la nueva direccion
+		const Vector wi_new = isotropicPhaseSample(); //nueva direccion para siguiente rayo
+
+		return explicitVPTracerRecursive(Ray(xt, wi_new), sigma_a, sigma_s)*sigma_s*T*(1/continueprob)*(1/pSuccess);
+	}
+
 }
 
 

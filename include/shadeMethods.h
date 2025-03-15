@@ -10,6 +10,7 @@
 #include "vptShadeMethods.h"
 
 //L de Solid Angle en ray marching
+//CUIDADO FUNCION INCOMPLETA
 inline Color solidAngleMarching(Vector n, Vector cx, Vector wray, double costheta_max, Point x, int indice, const Sphere &obj, Vector &aux, double alpha){
     Color L , Le;
     Vector wi;
@@ -49,7 +50,6 @@ inline Color solidAngleMarching(Vector n, Vector cx, Vector wray, double costhet
     else Le = Color();
     //funcion L
     L = Le.mult(fr)*n.dot(wi)*(1/solidAngleProb(costheta_max));
-
 
     return Le;
 }

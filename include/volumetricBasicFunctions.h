@@ -6,6 +6,7 @@
 #define VOLUMETRICBASICFUNCTIONS_H
 
 #include "mathUtilities.h"
+#include "samplingFunctions.h"
 #include "pathTracingUtilities.h"
 #include "vptSamplingFunctions.h"
 
@@ -204,6 +205,53 @@ inline bool equiAngularParams(int idsource, Point x, Point &x0, Ray r, double &D
     thetaA = atan2(A,D);
     thetaB = atan2(B,D);
     return true;
+}
+
+//resuelve la iluminación por single scattering para un punto en particular previamente muestreado
+inline Color singleScattering(Point xt, int idsource, double sigma_t, double sigma_s, double transmitanceXT, double probSource)
+{
+    Color Ld;
+    //calcular la dirección a la fuente de luz o light
+    //se debe usar angulo sólido o dirección única en caso de fuente puntual
+
+    //PARA FUENTE PUNTUAL
+    //calculando un single scattering
+    if (spheres[idsource].r == 0) {
+        if (const Point light = spheres[idsource].p; visibility(light, xt)) {
+            Color Le = spheres[idsource].radiance;
+            const double distanceLight = (light - xt).dot(light - xt);
+            Le = Le * (1 / distanceLight);
+            const Color Ls = Le * transmitance(xt, light, sigma_t) * isotropicPhaseFunction();
+            Ld = Ls * transmitanceXT * sigma_s * (1 / probSource);
+        }
+
+    }
+
+    //para fuentes no puntuales usar angulo solido
+    //todo ES POSIBLE AGREGAR LA RTUTINA EN UNA FUNCIÓN
+    //obtener el vector que conecta el centro de la fuente con xt, wc
+
+    Vector wc = spheres[idsource].p-xt;
+    //obtener su norma
+    double wc_magnitud = sqrt(wc.dot(wc));
+    wc = wc*(1/wc_magnitud); //aprovechamos para normalizarlo
+    //calcular el angulo del cono de visibilidad
+    double costheta_max = sqrt(1-(spheres[idsource].r/wc_magnitud)*(spheres[idsource].r/wc_magnitud));
+    //obtener la dirección en el cono, llamémosla wl por ser single scattering
+    const Vector wl = solidAngle(wc, costheta_max);
+    //calcular la probabilidad para dicha dirección
+    const double prob_wl = solidAngleProb(costheta_max);
+    //integrar usando la misma expresión de single scattering Ls
+    //todo si hay visibilidad
+    Color Le = spheres[idsource].radiance;
+    Point light = spheres[idsource].p; //TODO recalcularlo en la superficie de la fuente para que el calculo de la transmitancia sea correcto
+    //TODO para hacer el recalculo aprovecha que tienes que verificar la visibilidad
+    //evaluar la contribución single scattering Ls
+    const Color Ls = Le * transmitance(xt, light, sigma_t) * isotropicPhaseFunction();
+    //aplicar el resto de componentes para calcular la iluminación directa en el medio
+    Ld = Ls * transmitanceXT * sigma_s * (1/prob_wl)* (1 / probSource);
+
+    return Ld;
 }
 
 #endif //VOLUMETRICBASICFUNCTIONS_H
