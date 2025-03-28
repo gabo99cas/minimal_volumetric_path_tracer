@@ -784,25 +784,16 @@ int main(int argc, char *argv[]) {
 			int rpp = atoi(argv[1]); //en esta implementacion tenemos 1 muestra por rayo desde la camara 1 rpp = 1 spp
 
 			for(int i=0; i<rpp; i++){
-				Vector cameraRayDir = cx * ((double(x)+erand48(seed)-0.5)/w - .5) + cy * ((double(y)+erand48(seed)-0.5)/h - .5) + camera.d;
+				Vector cameraRayDir = cx * ((static_cast<double>(x)+erand48(seed)-0.5)/w - .5) + cy * ((static_cast<double>(y)+erand48(seed)-0.5)/h - .5) + camera.d;
 			
-				// computar el color del pixel para el punto que intersectó el rayo desde la camara
-
-				//pixelValue = explicitPathRecursive2(Ray(camera.o, cameraRayDir.normalize()),0)+ pixelValue;
-
-				//pixelValue = iterativePathTracer(Ray(camera.o, cameraRayDir.normalize()))+ pixelValue;
-
-				//pixelValue = tailExplicitPath(Ray(camera.o, cameraRayDir.normalize()), 0, Color(0,0,0),Vector(1,1,1), 1)+pixelValue;
-				//pixelValue = rayMarching2(Ray(camera.o, cameraRayDir.normalize()), 0.001,0.009, 0.1, 7)+pixelValue;
-
+				// calcular el color del pixel para el punto que intersectó el rayo desde la camara
 				//pixelValue = rayMarchingGlobal(Ray(camera.o, cameraRayDir.normalize()),0.001,0.0125,10)+pixelValue;
-				//pixelValue = volumetricPathTracer(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0)+pixelValue;
-				//pixelValue = volumetricPathTracerExplicit2(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0,5)+pixelValue;
-				//pixelValue = volumetricPathTracerExplicitEquiAngular(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0,7)+pixelValue;
 
-				//pixelValue = volumetricPathTracer3(Ray(camera.o, cameraRayDir.normalize()), 0.001, 0.009, 0)+pixelValue;
-				//pixelValue = volumetricPathTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
-				pixelValue = implicitVPTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.01,0.009)+pixelValue;
+				//pixelValue = iterativePathTracer(Ray(camera.o, cameraRayDir.normalize())) + pixelValue;
+				//pixelValue = iterativeVPTracerFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009)+pixelValue;
+				pixelValue = explicitVPTracerRecursiveFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
+				//pixelValue = MISVPTTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
+
 			}
 
 			pixelValue = pixelValue * (1/static_cast<double>(rpp)); //promedio de color de cada pixel

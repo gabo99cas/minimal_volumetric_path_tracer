@@ -108,7 +108,7 @@ inline Color iterativePathTracer(Ray r){
     Vector wi;
     int bounces = 0;
     double factor = 1;
-    double q = 0.1;
+    double q = 0.4;
     double continueprob = 1.0 - q;
     double prob;
     int i = 0;

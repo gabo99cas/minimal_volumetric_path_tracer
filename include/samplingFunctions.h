@@ -166,11 +166,13 @@ inline Color solidAngle(Vector n, Vector cx, Vector wray, double costheta_max, P
 	Color fr;
 	Vector wolocal = wray*-1;
 	Vector wilocal;
+
 	wi = solidAngle(cx, costheta_max); //wi guarda la direccion muestreada
 	aux = wi;
 	Ray r1 = Ray(x, wi); //lanzar el rayo desde x con direccion wi
 	wilocal = wi;
 
+	//NOTA: estas operaciones son necesarias debido a que microfacet prefiere las coordenadas locales
 	coordinateTraspose(n, wilocal);
 	coordinateTraspose(n, wolocal);
 

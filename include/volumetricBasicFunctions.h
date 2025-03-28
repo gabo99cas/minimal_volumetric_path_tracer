@@ -194,7 +194,6 @@ inline bool equiAngularParams(int idsource, Point x, Point &x0, Ray r, double &D
 
     }
 
-
     //calcular la magnitud de x0-c
     D = sqrt((x0-c).dot(x0-c));
     //theta A y theta B son los angulos de apertura de la fuente de luz, intervalo de integracion, en este caso usaremos r.o y x como puntos de integracion
@@ -207,9 +206,27 @@ inline bool equiAngularParams(int idsource, Point x, Point &x0, Ray r, double &D
     return true;
 }
 
+inline double equiAngularParams2(int idsource, double tMax, Ray r, double &D, double &thetaA, double &thetaB, double &sample_t){
+    Point c = spheres[idsource].p;
+    const Vector differential_vector = c - r.o;
+    const double diff_vec_norm = sqrt(differential_vector.dot(differential_vector));
+    const double projection_length = differential_vector.dot(r.d)/r.d.dot(r.d);
+    //calcular D
+    D = sqrt(diff_vec_norm*diff_vec_norm - projection_length*projection_length);
+    thetaA = atan2(0.0-projection_length,D);
+    thetaB = atan2(tMax-projection_length,D);
+
+    double xi = erand48(seed);
+
+    sample_t = D * tan((1-xi)*thetaA + xi*thetaB);
+    return sample_t + projection_length;
+}
 //resuelve la iluminación por single scattering para un punto en particular previamente muestreado
 inline Color singleScattering(Point xt, int idsource, double sigma_t, double sigma_s, double transmitanceXT, double probSource)
 {
+    //el parametro probSource se refiere a la probabilidad de seleccionar 1 de muchas fuentes para realizar el single scattering
+    //EJ: 5 fuentes ... probSource = 1/5.
+
     Color Ld;
     //calcular la dirección a la fuente de luz o light
     //se debe usar angulo sólido o dirección única en caso de fuente puntual
@@ -228,7 +245,7 @@ inline Color singleScattering(Point xt, int idsource, double sigma_t, double sig
     }
 
     //para fuentes no puntuales usar angulo solido
-    //todo ES POSIBLE AGREGAR LA RTUTINA EN UNA FUNCIÓN
+    //todo ES POSIBLE AGREGAR LA RUTINA EN UNA FUNCIÓN
     //obtener el vector que conecta el centro de la fuente con xt, wc
 
     Vector wc = spheres[idsource].p-xt;
@@ -236,20 +253,88 @@ inline Color singleScattering(Point xt, int idsource, double sigma_t, double sig
     double wc_magnitud = sqrt(wc.dot(wc));
     wc = wc*(1/wc_magnitud); //aprovechamos para normalizarlo
     //calcular el angulo del cono de visibilidad
-    double costheta_max = sqrt(1-(spheres[idsource].r/wc_magnitud)*(spheres[idsource].r/wc_magnitud));
+    double costheta_max = sqrt(1-spheres[idsource].r/wc_magnitud*(spheres[idsource].r/wc_magnitud));
     //obtener la dirección en el cono, llamémosla wl por ser single scattering
     const Vector wl = solidAngle(wc, costheta_max);
     //calcular la probabilidad para dicha dirección
     const double prob_wl = solidAngleProb(costheta_max);
     //integrar usando la misma expresión de single scattering Ls
-    //todo si hay visibilidad
-    Color Le = spheres[idsource].radiance;
-    Point light = spheres[idsource].p; //TODO recalcularlo en la superficie de la fuente para que el calculo de la transmitancia sea correcto
-    //TODO para hacer el recalculo aprovecha que tienes que verificar la visibilidad
-    //evaluar la contribución single scattering Ls
-    const Color Ls = Le * transmitance(xt, light, sigma_t) * isotropicPhaseFunction();
-    //aplicar el resto de componentes para calcular la iluminación directa en el medio
-    Ld = Ls * transmitanceXT * sigma_s * (1/prob_wl)* (1 / probSource);
+    //para resolver la visibilidad y obtner la distancia para medir la transmitancia
+    //SOLUCION MÁS DIRECTA: hacer uso de intersect y recolectar la distancia con t, comparar los id para ver si corresponde la esfera del emsior
+    double transmitanceDistance;
+    int idHitted;
+    intersect(Ray(xt, wl),transmitanceDistance, idHitted); //no es necesario considerar que el rayo no impacta con nada debido al cono restringido
+
+    if (idsource == idHitted)
+    {
+        //hay visibilidad
+
+        Color Le = spheres[idsource].radiance;
+        const double intermediateTransmitance = exp(sigma_t*transmitanceDistance*-1.0);
+        //evaluar la contribución single scattering Ls
+        const Color Ls = Le * intermediateTransmitance * isotropicPhaseFunction();
+        //aplicar el resto de componentes para calcular la iluminación directa en el medio
+        Ld = Ls * transmitanceXT * sigma_s * (1/prob_wl)* (1 / probSource);
+    }
+
+    return Ld;
+}
+
+//resuelve la iluminación por single scattering para un punto en particular previamente muestreado
+inline Color freeSingleScattering(Point xt, int idsource, double sigma_t, double probSource)
+{
+    //el parametro probSource se refiere a la probabilidad de seleccionar 1 de muchas fuentes para realizar el single scattering
+    //EJ: 5 fuentes ... probSource = 1/5.
+
+    Color Ld;
+    //calcular la dirección a la fuente de luz o light
+    //se debe usar angulo sólido o dirección única en caso de fuente puntual
+
+    //PARA FUENTE PUNTUAL
+    //calculando un single scattering
+    if (spheres[idsource].r == 0) {
+        if (const Point light = spheres[idsource].p; visibility(light, xt)) {
+            Color Le = spheres[idsource].radiance;
+            const double distanceLight = (light - xt).dot(light - xt);
+            Le = Le * (1 / distanceLight);
+            const Color Ls = Le * transmitance(xt, light, sigma_t) * isotropicPhaseFunction();
+            Ld = Ls * (1 / probSource);
+        }
+
+    }
+
+    //para fuentes no puntuales usar angulo solido
+    //todo: ES POSIBLE AGREGAR LA RUTINA EN UNA FUNCIÓN
+    //obtener el vector que conecta el centro de la fuente con xt, wc
+
+    Vector wc = spheres[idsource].p-xt;
+    //obtener su norma
+    double wc_magnitud = sqrt(wc.dot(wc));
+    wc = wc*(1/wc_magnitud); //aprovechamos para normalizarlo
+    //calcular el angulo del cono de visibilidad
+    double costheta_max = sqrt(1-spheres[idsource].r/wc_magnitud*(spheres[idsource].r/wc_magnitud));
+    //obtener la dirección en el cono, llamémosla wl por ser single scattering
+    const Vector wl = solidAngle(wc, costheta_max);
+    //calcular la probabilidad para dicha dirección
+    const double prob_wl = solidAngleProb(costheta_max);
+    //integrar usando la misma expresión de single scattering Ls
+    //para resolver la visibilidad y obtner la distancia para medir la transmitancia
+    //SOLUCION MÁS DIRECTA: hacer uso de intersect y recolectar la distancia con t, comparar los id para ver si corresponde la esfera del emsior
+    double transmitanceDistance;
+    int idHitted;
+    intersect(Ray(xt, wl),transmitanceDistance, idHitted); //no es necesario considerar que el rayo no impacta con nada debido al cono restringido
+
+    if (idsource == idHitted)
+    {
+        //hay visibilidad
+
+        Color Le = spheres[idsource].radiance;
+        const double intermediateTransmitance = exp(sigma_t*transmitanceDistance*-1.0);
+        //evaluar la contribución single scattering Ls
+        const Color Ls = Le * intermediateTransmitance * isotropicPhaseFunction();
+        //aplicar el resto de componentes para calcular la iluminación directa en el medio
+        Ld = Ls * (1/prob_wl) * (1 / probSource);
+    }
 
     return Ld;
 }
