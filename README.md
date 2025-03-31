@@ -1,1 +1,1 @@
-This project is a minimal rendering program to test sampling tecniques for Volumetric Path Tracing. Feel free to use and test any part of it for your own projects. 
+This project is a minimal rendering program to test sampling tecniques (Free-flight Sampling and Equi-angular Sampling) for Volumetric Path Tracing. Feel free to use any part of it for your own projects. Based on ideas from the PBR 3 and 4ed.
