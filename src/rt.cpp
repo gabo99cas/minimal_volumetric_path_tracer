@@ -787,11 +787,12 @@ int main(int argc, char *argv[]) {
 				Vector cameraRayDir = cx * ((static_cast<double>(x)+erand48(seed)-0.5)/w - .5) + cy * ((static_cast<double>(y)+erand48(seed)-0.5)/h - .5) + camera.d;
 			
 				// calcular el color del pixel para el punto que intersectó el rayo desde la camara
-				//pixelValue = rayMarchingGlobal(Ray(camera.o, cameraRayDir.normalize()),0.001,0.0125,10)+pixelValue;
+
+				//pixelValue = rayMarching3(Ray(camera.o, cameraRayDir.normalize()),0.001,0.0125, 0.1,7)+pixelValue;
 
 				//pixelValue = iterativePathTracer(Ray(camera.o, cameraRayDir.normalize())) + pixelValue;
-				//pixelValue = iterativeVPTracerFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009)+pixelValue;
-				pixelValue = explicitVPTracerRecursiveFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
+				pixelValue = iterativeVPTracerFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009)+pixelValue;
+				//pixelValue = explicitVPTracerRecursiveFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
 				//pixelValue = MISVPTTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
 
 			}

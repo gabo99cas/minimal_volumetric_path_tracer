@@ -1323,17 +1323,19 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
             wi.normalize();
             double cosine = normalXS.dot(wi);
 
-            finalColor = finalColor + (Ld_parcial + Ld).mult(pathThroughput) * (1 / continueprob);
-            stack.push({Ray(xs, wi), profundidad + 1, accumulatedColor, pathThroughput.mult(fsActual) * (1 / continueprob) * cosine * (1 / samplingProbability)});
+            Color parcialColor =  (Ld_parcial + Ld).mult(pathThroughput) * (1 / continueprob);
+            stack.push({Ray(xs, wi), profundidad + 1, accumulatedColor + parcialColor, pathThroughput.mult(fsActual) * (1 / continueprob) * cosine * (1 / samplingProbability)});
         } else {
             Point xt = currentRay.o + currentRay.d * d;
             Color Ld = freeSingleScattering(xt, idsource, sigma_t, probSource);
             Vector wi_new = isotropicPhaseSample();
 
-            finalColor = finalColor + Ld.mult(pathThroughput) * (sigma_s / sigma_t) * (1 / continueprob);
-            stack.push({Ray(xt, wi_new), profundidad + 1, accumulatedColor, pathThroughput * (sigma_s / sigma_t) * (1 / continueprob)});
+            Color parcialColor = Ld.mult(pathThroughput) * (sigma_s / sigma_t) * (1 / continueprob);
+            stack.push({Ray(xt, wi_new), profundidad + 1, accumulatedColor + parcialColor, pathThroughput * (sigma_s / sigma_t) * (1 / continueprob)});
         }
+    	finalColor = accumulatedColor; //actualizas finalColor que si es retornable
     }
+
 
     return finalColor;
 }

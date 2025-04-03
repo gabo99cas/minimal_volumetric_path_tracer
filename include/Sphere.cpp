@@ -28,10 +28,11 @@ std::vector<Sphere> spheres = {
 
 	//esferas dentro
 	Sphere(16.5, Point(-23, -24.3, -34.6), Color(.75, .75, .25), Color(), 0, Color(), Color(), 0), // esfera abajo-izq
+	Sphere(16.5,  Point(23, -24.3, -3.6),  Color(.4, .3, .2),    Color (0, 0, 0),0, Color(), Color(),0), // bottom right sphere
 
 
 	//Sphere(0,  Point(24, 24.3, -50),  Color(),   Color(0, 16000, 16000),0, Color(), Color(),0), // light source 1
-	Sphere(5,  Point(14, -24.3, -35),  Color(),   Color(20, 20, 30),0, Color(), Color(),0), // light source 2
+	Sphere(0,  Point(14, -24.3, -35),  Color(),   Color(2000, 2000, 3000),0, Color(), Color(),0), // light source 2
 	//Sphere(0,  Point(-23, -24.3, 10),  Color(),   Color(4000, 4000, 2000),0, Color(), Color(),0), // light source 2
 
 	//Sphere(0, Point(0, -24.3, -30), Color(),   Color(8000, 8000, 0),0, Color(), Color(),0) //light source 3
