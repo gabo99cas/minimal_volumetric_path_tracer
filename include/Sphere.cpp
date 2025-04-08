@@ -5,19 +5,24 @@
 #include "Sphere.h"
 
 std::vector<Sphere> spheres = {
-	/*
+
 	//Escena: radio, posicion, color, radiancia, material, eta, kappa, alpha
+	//paredes
 	Sphere(1e5,  Point(-1e5 - 49, 0, 0),  Color(.75, .25, .25),    Color (0, 0, 0),0, Color(), Color(),0), // left wall
   	Sphere(1e5,  Point(1e5 + 49, 0, 0),  Color(.25, .25, .75),    Color (0, 0, 0),0, Color(), Color(),0), // right wall
   	Sphere(1e5,  Point(0, 0, -1e5 - 81.6),  Color(.25, .75, .25),    Color (0, 0, 0),0, Color(), Color(),0), // back wall
   	Sphere(1e5,  Point(0, -1e5 - 40.8, 0),  Color(.25, .75, .75),    Color (0, 0, 0),0, Color(), Color(),0), // floor
   	Sphere(1e5,  Point(0, 1e5 + 40.8, 0),  Color(.75, .75, .25),     Color (0, 0, 0),0, Color(), Color(),0), // ceiling
+
+	//esferas dentro
   	Sphere(16.5,  Point(-23, -24.3, -34.6),  Color(.2, .3, .4),    Color (0, 0, 0),0, Color(), Color(),0), // bottom left sphere
   	Sphere(16.5,  Point(23, -24.3, -3.6),  Color(.4, .3, .2),    Color (0, 0, 0),0, Color(), Color(),0), // bottom right sphere
-  	Sphere(5,  Point(14, -24.3, -35),  Color(),    Color (12, 12, 12),0, Color(), Color(),0) // light source
-*/
+
+	//fuentes
+	Sphere(5,  Point(14, -24.3, -35),  Color(),    Color (12, 12, 12),0, Color(), Color(),0) // light source
 
 
+ /*
  //ESCENA DOS - COMPARAR LOS EFECTOS DE SUBIR Y BAJAR LOS VALORES DE SIGMA
 	//paredes
 	Sphere(1e5,  Point(-1e5 - 49, 0, 0),  Color(), Color(), 1, Color(1.66058, 0.88143, 0.521467), Color(9.2282, 6.27077, 4.83803), 0.03), // left wall
@@ -37,7 +42,7 @@ std::vector<Sphere> spheres = {
 
 	//Sphere(0, Point(0, -24.3, -30), Color(),   Color(8000, 8000, 0),0, Color(), Color(),0) //light source 3
 
-
+*/
 /*
 	//ESCENA 3 - QUE SUCEDE CUANDO LA FUENTE ESTA MAS CERCA DE LA CÁMARA
 	Sphere(30, Point(0, 11.2, 165), Color(.0, .25, .75), Color(), 0, Color(), Color(), 0), // esfera abajo-izq
