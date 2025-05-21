@@ -790,8 +790,8 @@ int main(int argc, char *argv[]) {
 
 				//pixelValue = rayMarching3(Ray(camera.o, cameraRayDir.normalize()),0.001,0.0125, 0.1,7)+pixelValue;
 
-				pixelValue = iterativePathTracer(Ray(camera.o, cameraRayDir.normalize())) + pixelValue;
-				//pixelValue = iterativeVPTracerFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009)+pixelValue;
+				//pixelValue = iterativePathTracer(Ray(camera.o, cameraRayDir.normalize())) + pixelValue;
+				pixelValue = iterativeVPTracerFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009)+pixelValue;
 				//pixelValue = explicitVPTracerRecursiveFree(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
 				//pixelValue = MISVPTTracerRecursive(Ray(camera.o, cameraRayDir.normalize()),0.001,0.009, 0) + pixelValue;
 

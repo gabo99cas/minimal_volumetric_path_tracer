@@ -1,21 +1,33 @@
 cmake_minimum_required(VERSION 3.10)
 project(RTProject LANGUAGES CXX)
 
-# Set the C++ compiler to clang++
-set(CMAKE_CXX_COMPILER "clang++")
+# Usar clang++ de Homebrew (LLVM)
+set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
 
-# Set C++ standard and other compile flags
+# Detectar y usar el SDK de macOS actual para evitar errores con 'cmath'
+execute_process(
+        COMMAND xcrun --sdk macosx --show-sdk-path
+        OUTPUT_VARIABLE MACOSX_SDK
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(CMAKE_OSX_SYSROOT ${MACOSX_SDK})
+
+# Estándar de C++ y optimizaciones
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-Xclang -fopenmp -mcpu=apple-m1 -march=native -O3")
+
+# Linkeo con OpenMP de Homebrew
 set(CMAKE_EXE_LINKER_FLAGS "-L/opt/homebrew/opt/libomp/lib -lomp")
 
-# Include directories for OpenMP
+# Rutas de include y lib para LLVM y libomp (Homebrew)
 include_directories(/opt/homebrew/opt/libomp/include)
+include_directories(/opt/homebrew/opt/llvm/include)
+link_directories(/opt/homebrew/opt/llvm/lib)
 
-# Add the includes directory to the search path
+# Incluir tu código
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Add executable
+# Ejecutable
 add_executable(rt src/rt.cpp
         include/Vector.cpp
         include/Vector.h
@@ -36,5 +48,5 @@ add_executable(rt src/rt.cpp
         include/vptSamplingFunctions.h
 )
 
-# Clean command (if using custom scripts for cleaning)
+# Limpieza
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "rt")

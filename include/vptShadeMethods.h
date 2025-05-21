@@ -1264,12 +1264,11 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
     struct StackFrame {
         Ray ray;
         int profundidad;
-        Color accumulatedColor;
         Color pathThroughput;
     };
 
     std::stack<StackFrame> stack;
-    stack.push({r, 0, Color(0, 0, 0), Color(1, 1, 1)});
+    stack.push({r, 0, Color(1, 1, 1)});
 
     Color finalColor(0, 0, 0);
     double sigma_t = sigma_a + sigma_s;
@@ -1277,7 +1276,7 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
     double q = 1 - continueprob;
 
     while (!stack.empty()) {
-        auto [currentRay, profundidad, accumulatedColor, pathThroughput] = stack.top();
+        auto [currentRay, profundidad, pathThroughput] = stack.top();
         stack.pop();
 
         if (erand48(seed) < q) continue;
@@ -1308,7 +1307,7 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
         if (d > t) {
             if (spheres[id].radiance.x > 0 || spheres[id].radiance.y > 0 || spheres[id].radiance.z > 0) {
                 if (profundidad == 0) {
-                    finalColor = finalColor + spheres[id].radiance.mult(pathThroughput);
+                    finalColor = spheres[id].radiance.mult(pathThroughput);
                 }
                 continue;
             }
@@ -1323,19 +1322,18 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
             wi.normalize();
             double cosine = normalXS.dot(wi);
 
-            Color parcialColor =  (Ld_parcial + Ld).mult(pathThroughput) * (1 / continueprob);
-            stack.push({Ray(xs, wi), profundidad + 1, accumulatedColor + parcialColor, pathThroughput.mult(fsActual) * (1 / continueprob) * cosine * (1 / samplingProbability)});
+            finalColor = finalColor+  (Ld_parcial + Ld).mult(pathThroughput) * (1 / continueprob);
+            stack.push({Ray(xs, wi), profundidad + 1, pathThroughput.mult(fsActual) * (1 / continueprob) * cosine * (1 / samplingProbability)});
         } else {
             Point xt = currentRay.o + currentRay.d * d;
             Color Ld = freeSingleScattering(xt, idsource, sigma_t, probSource);
             Vector wi_new = isotropicPhaseSample();
 
-            Color parcialColor = Ld.mult(pathThroughput) * (sigma_s / sigma_t) * (1 / continueprob);
-            stack.push({Ray(xt, wi_new), profundidad + 1, accumulatedColor + parcialColor, pathThroughput * (sigma_s / sigma_t) * (1 / continueprob)});
+            finalColor = finalColor + Ld.mult(pathThroughput) * (sigma_s / sigma_t) * (1 / continueprob);
+            stack.push({Ray(xt, wi_new), profundidad + 1, pathThroughput * (sigma_s / sigma_t) * (1 / continueprob)});
         }
-    	finalColor = accumulatedColor; //actualizas finalColor que si es retornable
-    }
 
+    }
 
     return finalColor;
 }
@@ -1365,7 +1363,7 @@ inline Color MISVPTTracerRecursive(const Ray &r, double sigma_a, double sigma_s,
 	if (!intersect(r, t, id)) {
 		//no regreses cero, propon un limite diferente para x_s
 		t = MAXFLOAT; //se ajusta la distancia maxima
-		//adicionalmente la probabilida de fallo se debe ajustar a 0 en este caso
+		//adicionalmente la probabilidad de fallo se debe ajustar a 0 en este caso
 		TrActual = 0; //la probabilidad de salir del medio es 0 porque no hay superficie y toda la escena esta inmersa ahi
 		//determinar el limite del rayo
 		xs = r.o + r.d * t;
@@ -1415,7 +1413,7 @@ inline Color MISVPTTracerRecursive(const Ray &r, double sigma_a, double sigma_s,
 	double sample_d;
 
 	//calcular una d de decision con free flight sampling
-	const double d_dec = freeFlightSample(sigma_t);
+	//const double d_dec = freeFlightSample(sigma_t);
 	//obtener la probabilidad de ir la superficie para fines de normalizacion
 	const double psurf = exp(sigma_t*t*-1.0); // es equivalente a la transmitancia TrActual
 
@@ -1424,15 +1422,17 @@ inline Color MISVPTTracerRecursive(const Ray &r, double sigma_a, double sigma_s,
 	const double pdf = equiAngularProb(D, thetaA, thetaB, sample_d) * (1-psurf);
 
 
-	if (d_dec>t) { //se sustituye la condición impuesta por una organica
+	if (erand48(seed) < psurf) { //se sustituye la condición impuesta por una organica
 
-		//una versión explicita no debe regresar luz al llegar a la fuente
+
 		if (spheres[id].radiance.x>0 || spheres[id].radiance.y>0 || spheres[id].radiance.z>0){
-			//solo regresar radiancia en la primera llamada
+
 			if (profundidad>0)
 			{
 				return {0, 0, 0};
 			}
+			//solo existe la posibilidad de regresar la radiancia en la primera llamada
+			//debido a que lleva una direccion fija que no esta sesgada hacia la fuente
 			return spheres[id].radiance;
 		}
 
@@ -1456,7 +1456,7 @@ inline Color MISVPTTracerRecursive(const Ray &r, double sigma_a, double sigma_s,
 
 		//importante, la transmitancia se omite debido a que es la probabilidad de salir, por tanto T/pFail = 1
 
-		return (Ld_parcial + Ld)*(1/continueprob) + fsActual.mult(explicitVPTracerRecursive(Ray(xs, wi), sigma_a, sigma_s, profundidad+1))*(1/continueprob)*cosine*(1/samplingProbability);
+		return (Ld_parcial + Ld)*(1/continueprob) + fsActual.mult(MISVPTTracerRecursive(Ray(xs, wi), sigma_a, sigma_s, profundidad+1))*(1/continueprob)*cosine*(1/samplingProbability);
 
 	}
 	else{
@@ -1474,7 +1474,7 @@ inline Color MISVPTTracerRecursive(const Ray &r, double sigma_a, double sigma_s,
 
 
 		//sumar Ld transformado aqui
-		return Ld*(1/pdf)*(1/continueprob) + explicitVPTracerRecursive(Ray(xt, wi_new), sigma_a, sigma_s, profundidad+1)*sigma_s*T*(1/continueprob)*(1/pdf);
+		return Ld*(1/pdf)*(1/continueprob) + MISVPTTracerRecursive(Ray(xt, wi_new), sigma_a, sigma_s, profundidad+1)*sigma_s*T*(1/continueprob)*(1/pdf);
 	}
 
 }

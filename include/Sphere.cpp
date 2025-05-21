@@ -8,18 +8,18 @@ std::vector<Sphere> spheres = {
 
 	//Escena: radio, posicion, color, radiancia, material, eta, kappa, alpha
 	//paredes
-	Sphere(1e5,  Point(-1e5 - 49, 0, 0),  Color(.75, .25, .25),    Color (0, 0, 0),0, Color(), Color(),0), // left wall
-  	Sphere(1e5,  Point(1e5 + 49, 0, 0),  Color(.25, .25, .75),    Color (0, 0, 0),0, Color(), Color(),0), // right wall
-  	Sphere(1e5,  Point(0, 0, -1e5 - 81.6),  Color(.25, .75, .25),    Color (0, 0, 0),0, Color(), Color(),0), // back wall
-  	Sphere(1e5,  Point(0, -1e5 - 40.8, 0),  Color(.25, .75, .75),    Color (0, 0, 0),0, Color(), Color(),0), // floor
-  	Sphere(1e5,  Point(0, 1e5 + 40.8, 0),  Color(.75, .75, .25),     Color (0, 0, 0),0, Color(), Color(),0), // ceiling
+	Sphere(1e5,  Point(-1e5 - 49, 0, 0),  Color(.5, .5, .5),    Color (0, 0, 0),0, Color(), Color(),0), // left wall
+  	Sphere(1e5,  Point(1e5 + 49, 0, 0),  Color(.0, .0, .99),    Color (0, 0, 0),0, Color(), Color(),0), // right wall
+  	Sphere(1e5,  Point(0, 0, -1e5 - 81.6),  Color(.5, .5, .5),    Color (0, 0, 0),0, Color(), Color(),0), // back wall
+  	Sphere(1e5,  Point(0, -1e5 - 40.8, 0),  Color(.5, .5, .5),    Color (0, 0, 0),0, Color(), Color(),0), // floor
+  	Sphere(1e5,  Point(0, 1e5 + 40.8, 0),  Color(.5, .5, .5),     Color (0, 0, 0),0, Color(), Color(),0), // ceiling
 
-	//esferas dentro
-  	Sphere(16.5,  Point(-23, -24.3, -34.6),  Color(.2, .3, .4),    Color (0, 0, 0),0, Color(), Color(),0), // bottom left sphere
-  	Sphere(16.5,  Point(23, -24.3, -3.6),  Color(.4, .3, .2),    Color (0, 0, 0),0, Color(), Color(),0), // bottom right sphere
-
+	Sphere(16.5, Point(-23, -24.3, -34.6), Color(.75, .75, .25), Color(), 0, Color(), Color(), 0), // esfera abajo-izq
+	Sphere(16.5,  Point(23, -24.3, -3.6),  Color(.4, .3, .2),    Color (0, 0, 0),0, Color(), Color(),0), // bottom right sphere
 	//fuentes
-	Sphere(5,  Point(14, -24.3, -35),  Color(),    Color (12, 12, 12),0, Color(), Color(),0) // light source
+	Sphere(5,  Point(0, 24.3, -35),  Color(),    Color (40, 40, 40),0, Color(), Color(),0),// light source
+	Sphere(2.5,  Point(-23, 24.3, 0),  Color(),    Color (80, 40, 80),0, Color(), Color(),0) // light source
+
 
 
  /*
