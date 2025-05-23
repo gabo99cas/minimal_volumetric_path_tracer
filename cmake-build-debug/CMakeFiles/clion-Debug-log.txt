@@ -10,6 +10,6 @@ Call Stack (most recent call first):
   CMakeLists.txt:2 (project)
 
 
--- Configuring done (1.2s)
--- Generating done (0.3s)
+-- Configuring done (0.0s)
+-- Generating done (0.2s)
 -- Build files have been written to: /Users/gabocastillo/Documents/computer_graphics_revamped/cmake-build-debug

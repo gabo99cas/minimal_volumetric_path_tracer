@@ -1267,8 +1267,8 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
         Color pathThroughput;
     };
 
-    std::stack<StackFrame> stack;
-    stack.push({r, 0, Color(1, 1, 1)});
+    std::vector<StackFrame> stack;
+    stack.emplace_back(r, 0, Color(1, 1, 1));
 
     Color finalColor(0, 0, 0);
     double sigma_t = sigma_a + sigma_s;
@@ -1276,8 +1276,8 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
     double q = 1 - continueprob;
 
     while (!stack.empty()) {
-        auto [currentRay, profundidad, pathThroughput] = stack.top();
-        stack.pop();
+        auto [currentRay, profundidad, pathThroughput] = stack.back();
+        stack.pop_back();
 
         if (erand48(seed) < q) continue;
 
@@ -1313,6 +1313,7 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
             }
 
             double Trs = transmitance(xs, spheres[idsource].p, sigma_t);
+        	// en este caso se manejan dos ld porque el calculo de luz de superficie para luz puntual y de area estan en funciones diferentee
             Color Ld_parcial = pLight(spheres[id], xs, normalXS, currentRay.d, spheres[idsource].radiance, spheres[idsource].p, spheres[id].alpha) * Trs * (1 / probSource);
             Color Ld = MISv2(spheres[id], xs, normalXS, currentRay.d, spheres[id].alpha, sigma_t);
 
@@ -1322,15 +1323,15 @@ inline Color iterativeVPTracerFree(const Ray &r, double sigma_a, double sigma_s)
             wi.normalize();
             double cosine = normalXS.dot(wi);
 
-            finalColor = finalColor+  (Ld_parcial + Ld).mult(pathThroughput) * (1 / continueprob);
-            stack.push({Ray(xs, wi), profundidad + 1, pathThroughput.mult(fsActual) * (1 / continueprob) * cosine * (1 / samplingProbability)});
+            finalColor = finalColor +  (Ld_parcial + Ld).mult(pathThroughput) * (1 / continueprob);
+            stack.emplace_back(Ray(xs, wi), profundidad + 1, pathThroughput.mult(fsActual) * (1 / continueprob) * cosine * (1 / samplingProbability));
         } else {
             Point xt = currentRay.o + currentRay.d * d;
             Color Ld = freeSingleScattering(xt, idsource, sigma_t, probSource);
             Vector wi_new = isotropicPhaseSample();
 
             finalColor = finalColor + Ld.mult(pathThroughput) * (sigma_s / sigma_t) * (1 / continueprob);
-            stack.push({Ray(xt, wi_new), profundidad + 1, pathThroughput * (sigma_s / sigma_t) * (1 / continueprob)});
+            stack.emplace_back(Ray(xt, wi_new), profundidad + 1, pathThroughput * (sigma_s / sigma_t) * (1 / continueprob));
         }
 
     }
